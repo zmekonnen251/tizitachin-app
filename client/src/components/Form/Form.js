@@ -80,6 +80,8 @@ const Form = ({ currentId, setCurrentId }) => {
         />
 
         <TextField
+          multiline
+          rows={4}
           sx={classes.fileInput}
           name="message"
           variant="outlined"

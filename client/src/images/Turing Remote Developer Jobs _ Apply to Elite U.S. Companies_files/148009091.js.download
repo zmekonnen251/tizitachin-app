@@ -1,0 +1,4 @@
+(function(d,s,i) {
+    var f,j; f=d.getElementsByTagName(s)[0]; j=d.createElement(s); j.async=true;
+    j.src='https://www.clarity.ms/tag/uet/'+i; f.parentNode.insertBefore(j,f);
+})(document, 'script', '148009091');
