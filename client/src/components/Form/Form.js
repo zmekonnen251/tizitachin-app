@@ -8,9 +8,8 @@ import { createPost, updatePost } from '../../redux/actions/posts';
 
 const Form = ({ currentId, setCurrentId }) => {
   const dispatch = useDispatch();
-
+  const user = JSON.parse(localStorage.getItem('profile'));
   const [postData, setPostData] = useState({
-    creator: '',
     title: '',
     message: '',
     tags: '',
@@ -28,22 +27,33 @@ const Form = ({ currentId, setCurrentId }) => {
     e.preventDefault();
 
     if (currentId) {
-      dispatch(updatePost(currentId, postData));
+      dispatch(
+        updatePost(currentId, { ...postData, name: user?.result?.name })
+      );
     } else {
-      dispatch(createPost(postData));
+      dispatch(createPost({ ...postData, name: user?.result?.name }));
     }
     handleClear();
   };
   const handleClear = () => {
     setCurrentId(null);
     setPostData({
-      creator: '',
       title: '',
       message: '',
       tags: '',
       selectedFile: '',
     });
   };
+
+  if (!user?.result?.name) {
+    return (
+      <Paper sx={classes.paper}>
+        <Typography variant="h6" align="center">
+          Please Sign In to create your own memories and like other's memories.
+        </Typography>
+      </Paper>
+    );
+  }
 
   return (
     <Paper sx={classes.paper}>
@@ -56,18 +66,6 @@ const Form = ({ currentId, setCurrentId }) => {
         <Typography variant="h6">
           {currentId ? 'Editing' : 'Creating'} a Memory
         </Typography>
-
-        <TextField
-          sx={classes.fileInput}
-          name="creator"
-          variant="outlined"
-          label="Creator"
-          fullWidth
-          value={postData.creator}
-          onChange={(e) =>
-            setPostData({ ...postData, creator: e.target.value })
-          }
-        />
 
         <TextField
           sx={classes.fileInput}

@@ -1,11 +1,11 @@
 // import { makeStyles } from '@material-ui/core/styles';
 import { createTheme } from '@mui/material';
-import {deepPurple} from '@mui/material/colors';
+import { deepPurple } from '@mui/material/colors';
 
 const theme = createTheme();
 export default {
   appBar: {
-    borderRadius: 15,
+    borderRadius: 8,
     margin: '30px 0',
     display: 'flex',
     flexDirection: 'row',
@@ -22,6 +22,7 @@ export default {
   },
   toolbar: {
     display: 'flex',
+
     justifyContent: 'flex-end',
     width: '400px',
   },
