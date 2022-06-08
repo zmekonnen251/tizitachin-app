@@ -18,8 +18,6 @@ import Input from './Input';
 import Icon from './Icon';
 import { AUTH } from '../../redux/actionTypes';
 import { signIn, signUp } from '../../redux/actions/auth';
-const clientId =
-  '737626982500-8nnk992aku81j5vmama0aprad90ss2os.apps.googleusercontent.com';
 
 const initialState = {
   fistName: '',
@@ -32,10 +30,13 @@ const Auth = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  const CLIENT_ID =
+    '737626982500-8nnk992aku81j5vmama0aprad90ss2os.apps.googleusercontent.com';
+
   useEffect(() => {
     function start() {
       gapi.client.init({
-        clinetId: clientId,
+        clinetId: CLIENT_ID,
         scope: '',
       });
     }
@@ -146,7 +147,7 @@ const Auth = () => {
           </Button>
 
           <GoogleLogin
-            clientId={clientId}
+            clientId={CLIENT_ID}
             render={(renderProps) => (
               <Button
                 sx={classes.googleButton}
