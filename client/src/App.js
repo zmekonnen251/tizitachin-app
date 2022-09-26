@@ -1,24 +1,41 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router,Routes,Route } from 'react-router-dom';
-import { Container} from '@mui/material';
+import {
+	BrowserRouter as Router,
+	Routes,
+	Route,
+	Navigate,
+} from 'react-router-dom';
+import { Container } from '@mui/material';
 import Navbar from './components/Navbar/Navbar';
 import Home from './components/Home/Home';
 import Auth from './components/Auth/Auth';
-
+import PostDetails from './components/PostDetails/PostDetails';
 
 const App = () => {
-  return (
-    <Container maxWidth="lg">
-      <Router>
-      <Navbar/>
-      <Routes>
-        <Route exact path='/' element={<Home/>}/>
-        <Route exact path='/auth' element={<Auth/>}/>
-      </Routes>
-      </Router>
-      
-    </Container>
-  );
+	const user = JSON.parse(localStorage.getItem('profile'));
+
+	return (
+		<Container maxWidth='xl'>
+			<Router>
+				<Navbar />
+				<Routes>
+					<Route
+						path='/'
+						exact
+						element={<Navigate to='/posts' replace={true} />}
+					/>
+					<Route path='/posts' exact element={<Home />} />
+					<Route path='/posts/search' exact element={<Home />} />
+					<Route path='/posts/:id' exact element={<PostDetails />} />
+					<Route
+						exact
+						path='/auth'
+						element={!user ? <Auth /> : <Navigate to='/posts' replace={true} />}
+					/>
+				</Routes>
+			</Router>
+		</Container>
+	);
 };
 
 export default App;

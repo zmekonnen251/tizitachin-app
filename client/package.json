@@ -16,6 +16,7 @@
     "dotenv": "^16.0.1",
     "gapi-script": "^1.2.0",
     "jwt-decode": "^3.1.2",
+    "material-ui-chip-input": "^2.0.0-beta.2",
     "moment": "^2.29.3",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",

@@ -22,6 +22,7 @@ const Navbar = () => {
 
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('profile')));
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const logout = () => {
     setUser(null);
     navigate('/auth');
@@ -39,7 +40,7 @@ const Navbar = () => {
     }
 
     setUser(JSON.parse(localStorage.getItem('profile')));
-  }, [location]);
+  }, [location, logout, user?.token]);
 
   return (
     <AppBar sx={classes.appBar} position="static" color="inherit">
