@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from 'react';
 import {
 	BrowserRouter as Router,
 	Routes,
@@ -11,9 +10,9 @@ import Home from './components/Home/Home';
 import Auth from './components/Auth/Auth';
 import PostDetails from './components/PostDetails/PostDetails';
 
-const App = () => {
-	const user = JSON.parse(localStorage.getItem('profile'));
+const user = JSON.parse(localStorage.getItem('profile'));
 
+const App = () => {
 	return (
 		<Container maxWidth='xl'>
 			<Router>
