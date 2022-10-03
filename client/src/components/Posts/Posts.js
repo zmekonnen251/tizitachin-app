@@ -6,15 +6,16 @@ import Post from './Post/Post';
 import classes from './styles';
 
 const Posts = ({ setCurrentId }) => {
-	const posts = useSelector((state) => state.posts);
-	console.log(posts);
+	const { posts, isLoading } = useSelector((state) => state.posts);
 
-	return !posts.length ? (
+	if (!posts.length && !isLoading) return 'No posts';
+
+	return isLoading ? (
 		<CircularProgress />
 	) : (
-		<Grid container spacing={6} sx={classes.mainContainer}>
+		<Grid container spacing={3} sx={classes.mainContainer} alignItems='stretch'>
 			{posts.map((post) => (
-				<Grid key={post._id} item xs={12} sm={6}>
+				<Grid key={post._id} item xs={12} sm={12} md={12} lg={12}>
 					<Post post={post} setCurrentId={setCurrentId} />
 				</Grid>
 			))}
