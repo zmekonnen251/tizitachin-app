@@ -16,7 +16,9 @@ const classes = {
 		flexDirection: 'column',
 		justifyContent: 'space-between',
 		borderRadius: '15px',
+		height: '100%',
 		position: 'relative',
+		width: '80%',
 	},
 	overlay: {
 		position: 'absolute',
@@ -45,7 +47,10 @@ const classes = {
 		padding: '0 16px 8px 16px',
 		display: 'flex',
 		justifyContent: 'space-between',
-		marginTop: '10px',
+	},
+	cardAction: {
+		display: 'block',
+		textAlign: 'initial',
 	},
 };
 
