@@ -5,27 +5,60 @@ import {
 	LIKE,
 	UPDATE,
 	FETCH_BY_SEARCH,
+	START_LOADING,
+	END_LOADING,
+	FETCH_POST,
 } from './../actionTypes';
-const postReducer = (posts = [], action) => {
+const postReducer = (state = { isLoading: true, posts: [] }, action) => {
 	switch (action.type) {
+		case FETCH_POST:
+			return {
+				...state,
+				post: action.payload,
+			};
+		case START_LOADING:
+			return { ...state, isLoading: true };
+		case END_LOADING:
+			return { ...state, isLoading: false };
 		case FETCH:
-			return action.payload;
+			return {
+				...state,
+				posts: action.payload.data,
+				currentPage: action.payload.currentPage,
+				numberOfPages: action.payload.numberOfPages,
+			};
 		case CREATE:
-			return [...posts, action.payload];
+			if (state.posts.length === 8) {
+				return {
+					...state,
+					posts: [action.payload, ...state.posts.slice(0, 7)],
+				};
+			} else {
+				return { ...state, posts: [action.payload, ...state.posts] };
+			}
 		case UPDATE:
-			return posts.map((post) =>
-				post._id === action.payload._id ? action.payload : post
-			);
+			return {
+				...state,
+				posts: state.posts.map((post) =>
+					post._id === action.payload._id ? action.payload : post
+				),
+			};
 		case DELETE:
-			return posts.filter((post) => post._id !== action.payload);
+			return {
+				...state,
+				posts: state.posts.filter((post) => post._id !== action.payload),
+			};
 		case LIKE:
-			return posts.map((post) =>
-				post._id === action.payload._id ? action.payload : post
-			);
+			return {
+				...state,
+				posts: state.posts.map((post) =>
+					post._id === action.payload._id ? action.payload : post
+				),
+			};
 		case FETCH_BY_SEARCH:
-			return action.payload;
+			return { ...state, posts: action.payload };
 		default:
-			return posts;
+			return state;
 	}
 };
 
