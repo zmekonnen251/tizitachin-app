@@ -11,7 +11,8 @@ import {
 	Box,
 } from '@mui/material';
 import classes from './styles';
-import memories from '../../images/memories.png';
+import memoriesLogo from '../../images/memories-Logo.png';
+import memoriesText from '../../images/memories-Text.png';
 import { LOGOUT } from '../../redux/actionTypes';
 
 const Navbar = () => {
@@ -40,22 +41,19 @@ const Navbar = () => {
 		}
 
 		setUser(JSON.parse(localStorage.getItem('profile')));
-	}, [location, logout, user?.token]);
+	}, [logout, location, user?.token]);
 
 	return (
 		<AppBar sx={classes.appBar} position='static' color='inherit'>
-			<Box sx={classes.brandContainer}>
-				<Typography
-					sx={classes.heading}
-					component={NavLink}
-					to='/'
-					variant='h2'
-					align='center'
-				>
-					Memories
-				</Typography>
-				<img sx={classes.image} src={memories} alt='memories' height='60' />
-			</Box>
+			<NavLink to='/' sx={classes.brandContainer}>
+				<img src={memoriesText} alt='icon' height='45px' />
+				<img
+					sx={classes.image}
+					src={memoriesLogo}
+					alt='memories'
+					height='40px'
+				/>
+			</NavLink>
 			<Toolbar sx={classes.toolbar}>
 				{user ? (
 					<Box sx={classes.profile}>

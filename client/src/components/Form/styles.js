@@ -1,6 +1,7 @@
 import { createTheme } from '@mui/material';
 
 const theme = createTheme();
+// eslint-disable-next-line import/no-anonymous-default-export
 export default {
 	paper: {
 		padding: theme.spacing(2),
