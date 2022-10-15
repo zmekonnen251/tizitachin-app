@@ -1,7 +1,14 @@
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-
+// import jwt from 'express-jwt';
+import jsonwebtoken from 'jsonwebtoken';
+import { OAuth2Client } from 'google-auth-library';
+import crypto from 'crypto';
+import { generateAccessToken, generateRefreshToken } from '../utils/utils.js';
 import User from '../models/user.js';
+import Token from '../models/token.js';
+import sendEmail from '../utils/sendEmail.js';
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const signin = async (req, res) => {
 	const { email, password } = req.body;
@@ -17,11 +24,56 @@ export const signin = async (req, res) => {
 		if (!isPasswordCorrect)
 			return res.status(400).json({ message: 'Invalid credentials' });
 
-		const token = jwt.sign({ email: oldUser.email, id: oldUser._id }, 'test', {
-			expiresIn: '1h',
+		if (!oldUser.verified) {
+			const token = await Token.findOne({ userId: oldUser._id });
+			if (!token) {
+				const newToken = new Token({
+					userId: oldUser._id,
+					token: crypto.randomBytes(16).toString('hex'),
+				}).save();
+
+				const url = `${process.env.BASE_URL}/user/${oldUser._id}/confirmation/${newToken.token}`;
+				await sendEmail({
+					email: oldUser.email,
+					subject: 'Account Verification Token',
+					message: `Please click on the following link ${url} to verify your account.`,
+				});
+
+				return res
+					.status(200)
+					.json({
+						message:
+							'An email has been sent to you. Please verify your account to login.',
+					});
+			}
+
+			res.status(400).json({ message: 'Please verify your email' });
+		}
+
+		// const token = jwt.sign({ email: oldUser.email, id: oldUser._id }, 'test', {
+		// 	expiresIn: '1h',
+		// });
+
+		const accessToken = generateAccessToken({
+			email: oldUser.email,
+			id: oldUser._id,
+		});
+		const refreshToken = generateRefreshToken({
+			email: oldUser.email,
+			id: oldUser._id,
 		});
 
-		res.status(200).json({ result: oldUser, token });
+		const _oldUser = {
+			name: oldUser.name,
+			email: oldUser.email,
+			_id: oldUser._id,
+			imageUrl: oldUser.imageUrl,
+		};
+		// res.status(200).json({ result: oldUser, token });
+		res.cookie('refresh_token', refreshToken, {
+			httpOnly: true,
+		});
+		res.status(200).json({ user: _oldUser, accessToken });
 	} catch (error) {
 		res.status(500).json({ message: 'Something went wrong' });
 
@@ -48,15 +100,170 @@ export const signup = async (req, res) => {
 			password: hashedPassword,
 			name: `${firstName} ${lastName}`,
 		});
+		const token = new Token({
+			userId: result._id,
+			token: crypto.randomBytes(16).toString('hex'),
+		}).save();
 
-		const token = jwt.sign({ email: result.email, id: result._id }, 'test', {
-			expiresIn: '1h',
+		const url = `${process.env.BASE_URL}/user/${result._id}/confirmation/${token.token}`;
+		await sendEmail({
+			email: result.email,
+			subject: 'Account Verification',
+			url,
 		});
 
-		res.status(200).json({ result, token });
+		const _result = {
+			name: result.name,
+			email: result.email,
+			_id: result._id,
+			imageUrl: result.imageUrl,
+		};
+
+		res.status(200).json({
+			message: 'An email has been sent to you. Please verify your account',
+		});
 	} catch (error) {
 		res.status(500).json({ message: 'Something went wrong' });
 
 		console.log(error);
+	}
+};
+
+export const googleSignin = async (req, res) => {
+	const { tokenId } = req.body;
+
+	const response = await client.verifyIdToken({
+		idToken: tokenId,
+		audience: process.env.GOOGLE_CLIENT_ID,
+	});
+
+	const { email_verified, name, email, picture: imageUrl } = response.payload;
+
+	if (email_verified) {
+		const user = await User.findOne({ email });
+
+		if (user) {
+			const accessToken = generateAccessToken({
+				email: user.email,
+				id: user._id,
+			});
+			const refreshToken = generateRefreshToken({
+				email: user.email,
+				id: user._id,
+			});
+
+			const _user = {
+				name: user.name,
+				email: user.email,
+				_id: user._id,
+				imageUrl: user.imageUrl,
+			};
+			res.cookie('refresh_token', refreshToken, {
+				httpOnly: true,
+				httpOnly: true,
+				path: '/',
+				sameSite: 'none',
+				secure: true,
+				domain: 'localhost',
+				expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+				maxAge: 3600,
+			});
+			res.status(200).json({ user, accessToken });
+		} else {
+			const password = email + process.env.GOOGLE_CLIENT_ID;
+			const hashedPassword = await bcrypt.hash(password, 12);
+
+			const result = await User.create({
+				email,
+				password: hashedPassword,
+				name,
+				imageUrl,
+			});
+
+			const accessToken = generateAccessToken({
+				email: result.email,
+				id: result._id,
+			});
+			const refreshToken = generateRefreshToken({
+				email: result.email,
+				id: result._id,
+			});
+
+			const _result = {
+				name: result.name,
+				email: result.email,
+				_id: result._id,
+				imageUrl: result.imageUrl,
+			};
+			res.cookie('token', refreshToken, {
+				httpOnly: true,
+				httpOnly: true,
+				path: '/',
+				sameSite: 'none',
+				secure: true,
+				domain: 'localhost',
+				expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+				maxAge: 3600,
+			});
+			res.status(200).json({ user: result, accessToken });
+		}
+	}
+};
+
+export const refresh = async (req, res) => {
+	const refreshToken = req.cookies.refresh_token;
+	const accessToken = req.headers.authorization.split(' ')[1];
+	if (!refreshToken || !accessToken)
+		return res.status(401).json({ message: 'Unauthorized' });
+
+	try {
+		const decodedRefreshToken = jsonwebtoken.verify(
+			token,
+			process.env.REFRESH_TOKEN_SECRET
+		);
+		const decodedAccessToken = jsonwebtoken.verify(
+			token,
+			process.env.ACCESS_TOKEN_SECRET
+		);
+
+		const user = await User.findById(decodedRefreshToken.id);
+
+		if (!user) return res.status(401).json({ message: 'Unauthorized' });
+
+		const accessToken = generateAccessToken({
+			email: user.email,
+			id: user._id,
+		});
+
+		res.status(200).json({ user, accessToken });
+	} catch (error) {
+		res.status(500).json({ message: 'Something went wrong' });
+	}
+};
+
+export const signout = async (req, res) => {
+	res.clearCookie('refresh_token');
+	res.status(200).json({ message: 'User signed out successfully' });
+};
+
+export const verifyEmail = async (req, res) => {
+	const { id, token } = req.params;
+	try {
+		const user = await User.findById(id);
+		if (!user) return res.status(404).json({ message: 'User not found' });
+
+		const _token = await Token.findOne({ token });
+		if (!_token) return res.status(404).json({ message: 'Token not found' });
+
+		if (_token.userId !== user._id.toString())
+			return res.status(401).json({ message: 'Unauthorized' });
+
+		// user.isVerified = true;
+		await User.updateOne({ _id: user._id }, { isVerified: true });
+		await token.remove();
+
+		res.status(200).json({ message: 'Email verified successfully' });
+	} catch (error) {
+		res.status(500).json({ message: 'Something went wrong' });
 	}
 };
