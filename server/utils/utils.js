@@ -1,9 +1,8 @@
 import jsonwebtoken from 'jsonwebtoken';
-import expressJwt from 'express-jwt';
 
 export const generateAccessToken = (user) => {
 	return jsonwebtoken.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-		expiresIn: '15m',
+		expiresIn: '5m',
 	});
 };
 

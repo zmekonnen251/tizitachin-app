@@ -6,12 +6,16 @@ const theme = createTheme();
 export default {
 	mainContainer: {
 		borderRadius: 15,
-		margin: '30px 0',
+		// margin: '30px 0',
 		display: 'flex',
 		flexDirection: 'row',
-		// gap: '20px',
+		gap: '20px',
 		alignItems: 'center',
 		padding: '10px 50px',
+		[theme.breakpoints.down('sm')]: {
+			// margin: '0',
+			padding: '0',
+		},
 	},
 	heading: {
 		color: 'rgba(0,183,255, 1)',

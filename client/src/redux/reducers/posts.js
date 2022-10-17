@@ -8,6 +8,7 @@ import {
 	START_LOADING,
 	END_LOADING,
 	FETCH_POST,
+	COMMENT,
 } from './../actionTypes';
 const postReducer = (state = { isLoading: true, posts: [] }, action) => {
 	switch (action.type) {
@@ -54,6 +55,16 @@ const postReducer = (state = { isLoading: true, posts: [] }, action) => {
 				posts: state.posts.map((post) =>
 					post._id === action.payload._id ? action.payload : post
 				),
+			};
+		case COMMENT:
+			return {
+				...state,
+				posts: state.posts.map((post) => {
+					if (post._id == +action.payload._id) {
+						return action.payload;
+					}
+					return post;
+				}),
 			};
 		case FETCH_BY_SEARCH:
 			return { ...state, posts: action.payload };

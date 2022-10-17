@@ -9,10 +9,12 @@ import Navbar from './components/Navbar/Navbar';
 import Home from './components/Home/Home';
 import Auth from './components/Auth/Auth';
 import PostDetails from './components/PostDetails/PostDetails';
-
-const user = JSON.parse(localStorage.getItem('profile'));
+import EmailVerify from './components/EmailVerify/EmailVerify';
 
 const App = () => {
+	const profile = JSON.parse(localStorage.getItem('profile'));
+	const user = profile?.user;
+
 	return (
 		<Container maxWidth='xl'>
 			<Router>
@@ -30,6 +32,10 @@ const App = () => {
 						exact
 						path='/auth'
 						element={!user ? <Auth /> : <Navigate to='/posts' replace={true} />}
+					/>
+					<Route
+						path='/users/:id/confirmation/:token'
+						element={<EmailVerify />}
 					/>
 				</Routes>
 			</Router>

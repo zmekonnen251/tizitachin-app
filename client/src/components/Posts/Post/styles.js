@@ -18,7 +18,7 @@ const classes = {
 		borderRadius: '15px',
 		height: '100%',
 		position: 'relative',
-		width: '80%',
+		width: '100%',
 	},
 	overlay: {
 		position: 'absolute',

@@ -19,7 +19,7 @@ app.use(cors());
 app.use(cookieParser());
 
 app.use('/posts', postRoutes);
-app.use('/user', userRoutes);
+app.use('/users', userRoutes);
 
 app.get('/', (req, res) => {
 	res.send('Hello to Memories API');

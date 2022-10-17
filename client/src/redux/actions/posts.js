@@ -9,6 +9,7 @@ import {
 	START_LOADING,
 	END_LOADING,
 	FETCH_POST,
+	COMMENT,
 } from './../actionTypes.js';
 //Action Creators
 
@@ -19,7 +20,7 @@ export const getPost = (id) => async (dispatch) => {
 		const { data } = await api.fetchPost(id);
 
 		dispatch({ type: FETCH_POST, payload: data });
-		console.log(data);
+
 		dispatch({ type: END_LOADING });
 	} catch (error) {
 		console.log(error);
@@ -36,7 +37,7 @@ export const getPosts = (page) => async (dispatch) => {
 
 		dispatch({ type: END_LOADING });
 	} catch (error) {
-		console.log(error);
+		console.log('hello', error);
 	}
 };
 
@@ -91,11 +92,23 @@ export const deletePost = (id) => async (dispatch) => {
 };
 
 export const likePost = (id) => async (dispatch) => {
-	const user = JSON.parse(localStorage.getItem('profile'));
+	const token = document.cookie.split('=')[1];
 	try {
-		const { data } = await api.likePost(id, user?.token);
+		const { data } = await api.likePost(id, token);
 
 		dispatch({ type: LIKE, payload: data });
+	} catch (error) {
+		console.log(error);
+	}
+};
+
+export const commentPost = (value, id) => async (dispatch) => {
+	try {
+		const { data } = await api.comment(value, id);
+
+		dispatch({ type: COMMENT, payload: data });
+
+		return data.comments;
 	} catch (error) {
 		console.log(error);
 	}

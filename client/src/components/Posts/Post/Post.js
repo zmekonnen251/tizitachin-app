@@ -23,13 +23,11 @@ import classes from './styles';
 const Post = ({ post, setCurrentId }) => {
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
-	const user = JSON.parse(localStorage.getItem('profile'));
+	const user = JSON.parse(localStorage.getItem('profile'))?.user;
 
 	const Likes = () => {
 		if (post['likes'] !== undefined && post.likes.length > 0) {
-			return post.likes.find(
-				(like) => like === (user?.result?.googleId || user?.result?._id)
-			) ? (
+			return post.likes.find((like) => like === user?._id) ? (
 				<>
 					<ThumbUpAltIcon fontSize='small' />
 					&nbsp;
@@ -73,8 +71,7 @@ const Post = ({ post, setCurrentId }) => {
 						{moment(post.createdAt).fromNow()}
 					</Typography>
 				</Box>
-				{(user?.result?.googleId === post?.creator ||
-					user?.result?._id === post?.creator) && (
+				{user?._id === post?.creator && (
 					<Box sx={classes.overlay2}>
 						<Button
 							onClick={(e) => {
@@ -110,15 +107,14 @@ const Post = ({ post, setCurrentId }) => {
 				<Button
 					size='small'
 					color='primary'
-					disabled={!user?.result}
+					disabled={!user}
 					onClick={() => {
 						dispatch(likePost(post._id));
 					}}
 				>
 					<Likes />
 				</Button>
-				{(user?.result?.googleId === post?.creator ||
-					user?.result?._id === post?.creator) && (
+				{user?._id === post?.creator && (
 					<Button
 						size='small'
 						color='error'

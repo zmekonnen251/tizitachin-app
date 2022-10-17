@@ -9,7 +9,7 @@ import { createPost, updatePost } from '../../redux/actions/posts';
 const Form = ({ currentId, setCurrentId }) => {
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
-	const user = JSON.parse(localStorage.getItem('profile'));
+	const user = JSON.parse(localStorage.getItem('profile'))?.user;
 	const [postData, setPostData] = useState({
 		title: '',
 		message: '',
@@ -28,11 +28,9 @@ const Form = ({ currentId, setCurrentId }) => {
 		e.preventDefault();
 
 		if (currentId) {
-			dispatch(
-				updatePost(currentId, { ...postData, name: user?.result?.name })
-			);
+			dispatch(updatePost(currentId, { ...postData, name: user?.name }));
 		} else {
-			dispatch(createPost({ ...postData, name: user?.result?.name }, navigate));
+			dispatch(createPost({ ...postData, name: user?.name }, navigate));
 		}
 		handleClear();
 	};
@@ -46,7 +44,7 @@ const Form = ({ currentId, setCurrentId }) => {
 		});
 	};
 
-	if (!user?.result?.name) {
+	if (!user?.name) {
 		return (
 			<Paper sx={classes.paper} elevation={6}>
 				<Typography variant='h6' align='center'>

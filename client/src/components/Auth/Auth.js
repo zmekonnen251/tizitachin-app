@@ -16,8 +16,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import classes from './styles';
 import Input from './Input';
 import Icon from './Icon';
-import { AUTH } from '../../redux/actionTypes';
-import { signIn, signUp } from '../../redux/actions/auth';
+import { signIn, signUp, signInWithGoogle } from '../../redux/actions/auth';
 
 const initialState = {
 	fistName: '',
@@ -45,12 +44,13 @@ const Auth = () => {
 	const [showPassword, setShowPassword] = useState(false);
 	const [isSignup, setIsSignup] = useState(false);
 	const [formData, setFormData] = useState(initialState);
+	const [msg, setMsg] = useState('');
 
 	const handleSubmit = (event) => {
 		event.preventDefault();
 
 		if (isSignup) {
-			dispatch(signUp(formData, navigate));
+			dispatch(signUp(formData, setMsg));
 		} else {
 			dispatch(signIn(formData, navigate));
 		}
@@ -69,11 +69,9 @@ const Auth = () => {
 	};
 
 	const googleSuccess = async (res) => {
-		const result = res?.profileObj;
-		const token = res?.tokenId;
-
+		const { tokenId } = res;
 		try {
-			dispatch({ type: AUTH, data: { result, token } });
+			dispatch(signInWithGoogle(tokenId, navigate));
 			navigate('/');
 		} catch (error) {
 			console.log(error);
@@ -145,6 +143,11 @@ const Auth = () => {
 					>
 						{isSignup ? 'Sign Up' : 'Sign In'}
 					</Button>
+					{isSignup && (
+						<Typography variant='body2' align='center'>
+							{msg}
+						</Typography>
+					)}
 
 					<GoogleLogin
 						clientId={CLIENT_ID}
