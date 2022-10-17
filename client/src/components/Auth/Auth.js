@@ -29,13 +29,10 @@ const Auth = () => {
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
 
-	const CLIENT_ID =
-		'737626982500-8nnk992aku81j5vmama0aprad90ss2os.apps.googleusercontent.com';
-
 	useEffect(() => {
 		function start() {
 			gapi.client.init({
-				clinetId: CLIENT_ID,
+				clinetId: process.env.GOOGLE_CLIENT_ID,
 				scope: '',
 			});
 		}
@@ -150,7 +147,7 @@ const Auth = () => {
 					)}
 
 					<GoogleLogin
-						clientId={CLIENT_ID}
+						clientId={process.env.GOOGLE_CLIENT_ID}
 						render={(renderProps) => (
 							<Button
 								sx={classes.googleButton}
