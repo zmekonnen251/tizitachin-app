@@ -26,6 +26,7 @@ export const signin = async (req, res) => {
 
 		if (!oldUser.verified) {
 			const token = await Token.findOne({ userId: oldUser._id });
+
 			if (!token) {
 				const newToken = new Token({
 					userId: oldUser._id,
@@ -39,15 +40,13 @@ export const signin = async (req, res) => {
 					message: `Please click on the following link ${url} to verify your account.`,
 				});
 
-				return res
-					.status(200)
-					.json({
-						message:
-							'An email has been sent to you. Please verify your account to login.',
-					});
+				return res.status(200).json({
+					message:
+						'An email has been sent to you. Please verify your account to login.',
+				});
 			}
 
-			res.status(400).json({ message: 'Please verify your email' });
+			return res.status(400).json({ message: 'Please verify your email' });
 		}
 
 		// const token = jwt.sign({ email: oldUser.email, id: oldUser._id }, 'test', {
@@ -69,10 +68,13 @@ export const signin = async (req, res) => {
 			_id: oldUser._id,
 			imageUrl: oldUser.imageUrl,
 		};
+
+		// console.log(res);
 		// res.status(200).json({ result: oldUser, token });
 		res.cookie('refresh_token', refreshToken, {
 			httpOnly: true,
 		});
+
 		res.status(200).json({ user: _oldUser, accessToken });
 	} catch (error) {
 		res.status(500).json({ message: 'Something went wrong' });
@@ -100,16 +102,16 @@ export const signup = async (req, res) => {
 			password: hashedPassword,
 			name: `${firstName} ${lastName}`,
 		});
-		const token = new Token({
+		const token = await Token.create({
 			userId: result._id,
 			token: crypto.randomBytes(16).toString('hex'),
-		}).save();
+		});
 
-		const url = `${process.env.BASE_URL}/user/${result._id}/confirmation/${token.token}`;
-		await sendEmail({
+		const url = `${process.env.BASE_URL}/users/${result._id}/confirmation/${token.token}`;
+		const send = await sendEmail({
 			email: result.email,
 			subject: 'Account Verification',
-			url,
+			message: `Please click on the following link ${url} to verify your account.`,
 		});
 
 		const _result = {
@@ -218,11 +220,11 @@ export const refresh = async (req, res) => {
 
 	try {
 		const decodedRefreshToken = jsonwebtoken.verify(
-			token,
+			refreshToken,
 			process.env.REFRESH_TOKEN_SECRET
 		);
 		const decodedAccessToken = jsonwebtoken.verify(
-			token,
+			accessToken,
 			process.env.ACCESS_TOKEN_SECRET
 		);
 
@@ -230,12 +232,12 @@ export const refresh = async (req, res) => {
 
 		if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
-		const accessToken = generateAccessToken({
+		const newAccessToken = generateAccessToken({
 			email: user.email,
 			id: user._id,
 		});
 
-		res.status(200).json({ user, accessToken });
+		res.status(200).json({ user, accessToken: newAccessToken });
 	} catch (error) {
 		res.status(500).json({ message: 'Something went wrong' });
 	}
@@ -248,19 +250,26 @@ export const signout = async (req, res) => {
 
 export const verifyEmail = async (req, res) => {
 	const { id, token } = req.params;
+
 	try {
 		const user = await User.findById(id);
 		if (!user) return res.status(404).json({ message: 'User not found' });
 
 		const _token = await Token.findOne({ token });
+
+		if (user.verified) {
+			await _token.delete();
+			return res.status(400).json({ message: 'Email already verified' });
+		}
+
 		if (!_token) return res.status(404).json({ message: 'Token not found' });
 
-		if (_token.userId !== user._id.toString())
+		if (_token.userId.toString() !== user._id.toString())
 			return res.status(401).json({ message: 'Unauthorized' });
 
-		// user.isVerified = true;
-		await User.updateOne({ _id: user._id }, { isVerified: true });
-		await token.remove();
+		await User.updateOne({ _id: user._id }, { verified: true });
+
+		await _token.delete();
 
 		res.status(200).json({ message: 'Email verified successfully' });
 	} catch (error) {

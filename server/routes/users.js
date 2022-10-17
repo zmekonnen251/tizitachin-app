@@ -1,5 +1,4 @@
 import express from 'express';
-import auth from '../middleware/auth.js';
 import {
 	signin,
 	signup,
@@ -16,6 +15,6 @@ router.post('/signup', signup);
 router.get('/signout', signout);
 router.post('/google', googleSignin);
 router.get('/refresh', refresh);
-router.get('/:id/confirmation/:token',verifyEmail);
+router.get('/:id/confirmation/:token', verifyEmail);
 
 export default router;

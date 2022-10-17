@@ -1,33 +1,27 @@
 import jsonwebtoken from 'jsonwebtoken';
-import expressJwt from 'express-jwt';
-
-// wants to like a post
-// click the like button => auth middleware (next) => like controller...
-
-const { expressjwt: jwt } = expressJwt;
 
 const auth = async (req, res, next) => {
 	try {
-		console.log(req.headers.authorization);
-		const decodedDataAccess = jsonwebtoken.verify(
-			req.headers.authorization,
-			process.env.ACCESS_TOKEN_SECRET
-		);
-
-		const decodedDataRefresh = jsonwebtoken.verify(
+		const decodedRefreshToken = jsonwebtoken.verify(
 			req.cookies.refresh_token,
 			process.env.REFRESH_TOKEN_SECRET
 		);
 
-		if (decodedDataAccess.id === decodedDataRefresh.id) {
-			req.userId = decodedDataAccess.id;
-		} else {
-			res.status(401).json({ message: 'Unauthenticated' });
+		const decodedAccessToken = jsonwebtoken.verify(
+			req.headers.authorization.split(' ')[1],
+			process.env.ACCESS_TOKEN_SECRET
+		);
+
+		if (decodedAccessToken.id !== decodedRefreshToken.id) {
+			return res.status(401).json({ message: 'Unauthorized' });
 		}
+
+		req.userId = decodedAccessToken.id;
+		next();
 	} catch (error) {
-		res.status(401).json({ message: 'Unauthenticated' });
+		console.log(error);
+		return res.status(401).json({ message: 'Unauthorized' });
 	}
-	next();
 };
 
 export default auth;

@@ -13,35 +13,36 @@ import {
 import classes from './styles';
 import memoriesLogo from '../../images/memories-Logo.png';
 import memoriesText from '../../images/memories-Text.png';
-import { LOGOUT } from '../../redux/actionTypes';
+import { signOut, refreshToken } from '../../redux/actions/auth';
 
 const Navbar = () => {
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
 
-	const location = useLocation();
+	const profile = JSON.parse(localStorage.getItem('profile'));
+	const userData = profile?.user;
+	const token = profile?.token;
+	const [user, setUser] = useState(userData);
 
-	const [user, setUser] = useState(JSON.parse(localStorage.getItem('profile')));
+	const location = useLocation();
 
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	const logout = () => {
-		setUser(null);
-		navigate('/auth');
-		dispatch({ type: LOGOUT });
+		dispatch(signOut(navigate, setUser));
 	};
 
 	useEffect(() => {
-		const token = user?.token;
-
 		if (token) {
 			const decodedToken = decode(token);
 			if (decodedToken.exp * 1000 < new Date().getTime()) {
-				logout();
+				dispatch(refreshToken(setUser));
+			} else {
+				setUser(userData);
 			}
 		}
 
-		setUser(JSON.parse(localStorage.getItem('profile')));
-	}, [logout, location, user?.token]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [location]);
 
 	return (
 		<AppBar sx={classes.appBar} position='static' color='inherit'>
@@ -57,15 +58,11 @@ const Navbar = () => {
 			<Toolbar sx={classes.toolbar}>
 				{user ? (
 					<Box sx={classes.profile}>
-						<Avatar
-							sx={classes.purple}
-							alt={user.result.name}
-							src={user.result.imageUrl}
-						>
-							{user.result.name.charAt(0).toUpperCase()}
+						<Avatar sx={classes.purple} alt={user.name} src={user.imageUrl}>
+							{user.name.charAt(0).toUpperCase()}
 						</Avatar>
 						<Typography sx={classes.userName} variant='h6'>
-							{user.result.name}
+							{user.name}
 						</Typography>
 						<Button variant='contained' color='error' onClick={logout}>
 							Logout
