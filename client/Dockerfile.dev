@@ -1,0 +1,13 @@
+FROM node:19-alpine
+
+WORKDIR /app
+
+COPY package.json .
+
+RUN npm install --legacy-peer-deps --force
+
+COPY . .
+
+# required for docker desktop port mapping
+
+CMD ["npm","start"]

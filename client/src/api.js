@@ -15,28 +15,28 @@ axios.interceptors.request.use(async (req) => {
 	return req;
 });
 
-export const fetchPost = (id) => axios.get(`/posts/${id}`);
-export const fetchPosts = (page) => axios.get(`/posts/?page=${page}`);
+export const fetchPost = (id) => axios.get(`/api/posts/${id}`);
+export const fetchPosts = (page) => axios.get(`/api/posts/?page=${page}`);
 export const fetchPostsBySearch = (searchQuery) =>
 	axios.get(
-		`/posts/search?searchQuery=${searchQuery.searchTerm || 'none'}&tags=${
+		`/api/posts/search?searchQuery=${searchQuery.searchTerm || 'none'}&tags=${
 			searchQuery.tags
 		}`
 	);
-export const createPost = (newPost) => axios.post('/posts', newPost);
+export const createPost = (newPost) => axios.post('/api/posts', newPost);
 export const updatePost = (id, updatedPost) =>
-	axios.patch(`/posts/${id}`, updatedPost);
-export const deletePost = (id) => axios.delete(`/posts/${id}`);
-export const likePost = (id) => axios.patch(`/posts/${id}/likePost`);
+	axios.patch(`/api/posts/${id}`, updatedPost);
+export const deletePost = (id) => axios.delete(`/api/posts/${id}`);
+export const likePost = (id) => axios.patch(`/api/posts/${id}/likePost`);
 export const comment = (value, id) =>
-	axios.post(`/posts/${id}/commentPost`, { value });
-export const signIn = (formData) => axios.post(`/users/signin`, formData);
-export const signUp = (formData) => axios.post(`/users/signup`, formData);
-export const signOut = () => axios.get(`/users/signout`);
+	axios.post(`/api/posts/${id}/commentPost`, { value });
+export const signIn = (formData) => axios.post(`/api/users/signin`, formData);
+export const signUp = (formData) => axios.post(`/api/users/signup`, formData);
+export const signOut = () => axios.get(`/api/users/signout`);
 export const signInWithGoogle = (tokenId) =>
-	axios.post(`/users/google`, { tokenId });
+	axios.post(`/api/users/google`, { tokenId });
 
 export const verifyEmail = (id, token) =>
-	axios.get(`/users/${id}/confirmation/${token}`);
+	axios.get(`/api/users/${id}/confirmation/${token}`);
 
-export const refreshToken = () => axios.get(`/users/refresh`);
+export const refreshToken = () => axios.get(`/api/users/refresh`);
