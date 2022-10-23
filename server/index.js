@@ -24,13 +24,13 @@ app.use('/users', userRoutes);
 app.get('/', (req, res) => {
 	res.send('Hello to Memories API');
 });
-const PORT = process.env.PORT || 5000;
+// const PORT = process.env.PORT || 5000;
 
 mongoose
 	.connect(process.env.CONNECTION_URL)
 	.then(() =>
-		app.listen(PORT, '10.42.0.1', () =>
-			console.log(`Server Running on Port: http://10.42.0.1:${PORT}`)
+		app.listen(5000, () =>
+			console.log(`Server Running on Port: http://localhost:5000`)
 		)
 	)
 	.catch((error) => console.log(`${error} did not connect`));

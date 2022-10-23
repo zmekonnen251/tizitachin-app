@@ -162,13 +162,6 @@ export const googleSignin = async (req, res) => {
 			};
 			res.cookie('refresh_token', refreshToken, {
 				httpOnly: true,
-				httpOnly: true,
-				path: '/',
-				sameSite: 'none',
-				secure: true,
-				domain: 'localhost',
-				expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-				maxAge: 3600,
 			});
 			res.status(200).json({ user, accessToken });
 		} else {
@@ -199,13 +192,6 @@ export const googleSignin = async (req, res) => {
 			};
 			res.cookie('token', refreshToken, {
 				httpOnly: true,
-				httpOnly: true,
-				path: '/',
-				sameSite: 'none',
-				secure: true,
-				domain: 'localhost',
-				expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-				maxAge: 3600,
 			});
 			res.status(200).json({ user: result, accessToken });
 		}
@@ -215,6 +201,7 @@ export const googleSignin = async (req, res) => {
 export const refresh = async (req, res) => {
 	const refreshToken = req.cookies.refresh_token;
 	const accessToken = req.headers.authorization.split(' ')[1];
+
 	if (!refreshToken || !accessToken)
 		return res.status(401).json({ message: 'Unauthorized' });
 

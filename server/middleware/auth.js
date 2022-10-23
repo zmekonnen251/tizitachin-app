@@ -1,6 +1,7 @@
 import jsonwebtoken from 'jsonwebtoken';
 
 const auth = async (req, res, next) => {
+	console.log(req.cookies);
 	try {
 		const decodedRefreshToken = jsonwebtoken.verify(
 			req.cookies.refresh_token,
