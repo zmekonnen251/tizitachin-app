@@ -1,11 +1,11 @@
 import React, { useState, useRef } from 'react';
-import { useDispatch} from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { Typography, TextField, Button, Box } from '@mui/material';
 import { commentPost } from '../../redux/actions/posts';
 import classes from './styles';
 
 const CommentSection = ({ post }) => {
-	const { user } = JSON.parse(localStorage.getItem('profile'));
+	const user = JSON.parse(localStorage.getItem('profile'))?.user;
 	const [comment, setComment] = useState('');
 	const dispatch = useDispatch();
 	const [comments, setComments] = useState(post?.comments);
