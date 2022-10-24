@@ -32,23 +32,11 @@ const Home = () => {
 	const [searchTerm, setSearchTerm] = useState('');
 	const [tags, setTags] = useState([]);
 
-	// useEffect(() => {
-	// 	dispatch(getPosts());
-	// }, [dispatch, currentId]);
-
 	const handleKeyPress = (e) => {
 		if (e.keyCode === 13) {
 			searchPost();
 		}
 	};
-
-	// const handleAdd = (tag) => {
-	// 	setTags([...tags, tag]);
-	// };
-
-	// const handleDelete = (tag) => {
-	// 	setTags(tags.filter((t) => t !== tag));
-	// };
 
 	const searchPost = () => {
 		if (searchTerm.trim() || tags) {
@@ -67,11 +55,6 @@ const Home = () => {
 		<Grow in>
 			<Container maxWidth='xl'>
 				<Grid
-					// sx={(theme) => ({
-					// 	[theme.breakpoints.down('sm')]: {
-					// 		flexDirection: 'column-reverse',
-					// 	},
-					// })}
 					container
 					justifyContent='space-between'
 					alignItems='stretch'
@@ -99,15 +82,7 @@ const Home = () => {
 								value={searchTerm}
 								onChange={(e) => setSearchTerm(e.target.value)}
 							/>
-							{/* <ChipInput
-								style={{ margin: '10px 0' }}
-								value={tags}
-								onAdd={handleAdd}
-								onDelete={handleDelete}
-								label='Search Tags'
-								variant='outlined'
-								fullWidth
-							/> */}
+
 							<Autocomplete
 								sx={classes.searchInputTags}
 								multiple

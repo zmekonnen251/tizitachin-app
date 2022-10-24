@@ -8,9 +8,9 @@ import classes from './styles';
 const Posts = ({ setCurrentId }) => {
 	const { posts, isLoading } = useSelector((state) => state.posts);
 
-	if (!posts.length && !isLoading) return 'No posts';
+	if (!posts?.length && !isLoading) return 'No posts';
 
-	return isLoading ? (
+	return posts && isLoading ? (
 		<CircularProgress />
 	) : (
 		<Grid container spacing={3} sx={classes.mainContainer} alignItems='stretch'>
