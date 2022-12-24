@@ -9,16 +9,18 @@ import {
 	getPost,
 	commentPost,
 } from '../controllers/posts.js';
-import auth from '../middleware/auth.js';
+
+import verifyJwt from '../middleware/verifyJwt.js';
 
 const router = express.Router();
 // localhost:5000/posts
 router.get('/', getPosts);
-router.post('/', auth, createPost);
+router.post('/', verifyJwt, createPost);
 router.get('/search', getPostsBySearch);
 router.get('/:id', getPost);
-router.patch('/:id', auth, updatePost);
-router.delete('/:id', auth, deletePost);
-router.patch('/:id/likePost', auth, likePost);
-router.post('/:id/commentPost', auth, commentPost);
+router.patch('/:id', verifyJwt, updatePost);
+router.delete('/:id', verifyJwt, deletePost);
+router.patch('/:id/likePost', verifyJwt, likePost);
+router.post('/:id/commentPost', verifyJwt, commentPost);
+
 export default router;

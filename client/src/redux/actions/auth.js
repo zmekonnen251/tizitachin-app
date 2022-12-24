@@ -1,4 +1,4 @@
-import { AUTH, LOGOUT } from '../actionTypes';
+import { AUTH, LOGOUT, REFRESH_TOKEN } from '../actionTypes';
 import * as api from '../../api';
 
 export const signIn = (formData, navigate) => async (dispatch) => {
@@ -6,6 +6,7 @@ export const signIn = (formData, navigate) => async (dispatch) => {
 		//log in the user..
 		const { data } = await api.signIn(formData);
 		const { accessToken: token, user } = data;
+		console.log(data);
 
 		dispatch({ type: AUTH, payload: { token, user } });
 
@@ -44,9 +45,8 @@ export const signInWithGoogle = (tokenId, navigate) => async (dispatch) => {
 export const signOut = (navigate, setUser) => async (dispatch) => {
 	try {
 		const res = await api.signOut();
-		if (res.status === 200) {
+		if (res.status === 204) {
 			dispatch({ type: LOGOUT });
-			setUser(null);
 			navigate('/auth');
 		}
 	} catch (error) {
@@ -72,13 +72,12 @@ export const verifyEmail = (id, token, setValidUrl) => async (dispatch) => {
 	}
 };
 
-export const refreshToken = (setUser) => async (dispatch) => {
+export const refreshToken = () => async (dispatch) => {
 	try {
 		const { data } = await api.refreshToken();
-		const { accessToken: token, user } = data;
+		const { accessToken: token } = data;
 
-		dispatch({ type: AUTH, payload: { token, user } });
-		setUser(user);
+		dispatch({ type: REFRESH_TOKEN, payload: token });
 	} catch (error) {
 		console.log(error);
 	}

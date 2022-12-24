@@ -1,12 +1,15 @@
 import bcrypt from 'bcryptjs';
 // import jwt from 'express-jwt';
-import jsonwebtoken from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import crypto from 'crypto';
+import dotenv from 'dotenv';
 import { generateAccessToken, generateRefreshToken } from '../utils/utils.js';
 import User from '../models/user.js';
 import Token from '../models/token.js';
 import sendEmail from '../utils/sendEmail.js';
+
+dotenv.config();
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -21,61 +24,72 @@ export const signin = async (req, res) => {
 
 		const isPasswordCorrect = await bcrypt.compare(password, oldUser.password);
 
+		console.log(oldUser);
 		if (!isPasswordCorrect)
 			return res.status(400).json({ message: 'Invalid credentials' });
 
-		if (!oldUser.verified) {
-			const token = await Token.findOne({ userId: oldUser._id });
+		// if (!oldUser.verified) {
+		// 	const token = await Token.findOne({ userId: oldUser._id });
 
-			if (!token) {
-				const newToken = new Token({
-					userId: oldUser._id,
-					token: crypto.randomBytes(16).toString('hex'),
-				}).save();
+		// 	if (!token) {
+		// 		const newToken = new Token({
+		// 			userId: oldUser._id,
+		// 			token: crypto.randomBytes(16).toString('hex'),
+		// 		}).save();
 
-				const url = `${process.env.BASE_URL}/user/${oldUser._id}/confirmation/${newToken.token}`;
-				await sendEmail({
-					email: oldUser.email,
-					subject: 'Account Verification Token',
-					message: `Please click on the following link ${url} to verify your account.`,
-				});
+		// 		const url = `${process.env.BASE_URL}/user/${oldUser._id}/confirmation/${newToken.token}`;
+		// 		await sendEmail({
+		// 			email: oldUser.email,
+		// 			subject: 'Account Verification Token',
+		// 			message: `Please click on the following link ${url} to verify your account.`,
+		// 		});
 
-				return res.status(200).json({
-					message:
-						'An email has been sent to you. Please verify your account to login.',
-				});
-			}
+		// 		return res.status(200).json({
+		// 			message:
+		// 				'An email has been sent to you. Please verify your account to login.',
+		// 		});
+		// 	}
 
-			return res.status(400).json({ message: 'Please verify your email' });
-		}
-
-		// const token = jwt.sign({ email: oldUser.email, id: oldUser._id }, 'test', {
-		// 	expiresIn: '1h',
-		// });
+		// 	return res.status(400).json({ message: 'Please verify your email' });
+		// }
 
 		const accessToken = generateAccessToken({
 			email: oldUser.email,
-			id: oldUser._id,
+			_id: oldUser._id,
 		});
 		const refreshToken = generateRefreshToken({
 			email: oldUser.email,
-			id: oldUser._id,
-		});
-
-		const _oldUser = {
-			name: oldUser.name,
-			email: oldUser.email,
 			_id: oldUser._id,
-			imageUrl: oldUser.imageUrl,
-		};
-
-		// console.log(res);
-		// res.status(200).json({ result: oldUser, token });
-		res.cookie('refresh_token', refreshToken, {
-			httpOnly: true,
 		});
 
-		res.status(200).json({ user: _oldUser, accessToken });
+		await User.findByIdAndUpdate(
+			oldUser._id,
+			{
+				refreshToken: refreshToken,
+			},
+			{
+				new: true,
+			}
+		);
+
+		res.cookie('jwt', refreshToken, {
+			httpOnly: true,
+			secure: true,
+			sameSite: 'none',
+			maxAge: 7 * 24 * 60 * 60 * 1000,
+		});
+
+		console.log(res.cookies);
+
+		res.status(200).json({
+			user: {
+				name: oldUser.name,
+				email: oldUser.email,
+				_id: oldUser._id,
+				imageUrl: oldUser.imageUrl,
+			},
+			accessToken,
+		});
 	} catch (error) {
 		res.status(500).json({ message: 'Something went wrong' });
 
@@ -102,24 +116,19 @@ export const signup = async (req, res) => {
 			password: hashedPassword,
 			name: `${firstName} ${lastName}`,
 		});
+
 		const token = await Token.create({
 			userId: result._id,
 			token: crypto.randomBytes(16).toString('hex'),
 		});
 
 		const url = `${process.env.BASE_URL}/users/${result._id}/confirmation/${token.token}`;
-		const send = await sendEmail({
+
+		await sendEmail({
 			email: result.email,
 			subject: 'Account Verification',
 			message: `Please click on the following link ${url} to verify your account.`,
 		});
-
-		const _result = {
-			name: result.name,
-			email: result.email,
-			_id: result._id,
-			imageUrl: result.imageUrl,
-		};
 
 		res.status(200).json({
 			message: 'An email has been sent to you. Please verify your account',
@@ -133,7 +142,7 @@ export const signup = async (req, res) => {
 
 export const googleSignin = async (req, res) => {
 	const { tokenId } = req.body;
-
+	console.log(tokenId);
 	const response = await client.verifyIdToken({
 		idToken: tokenId,
 		audience: process.env.GOOGLE_CLIENT_ID,
@@ -154,16 +163,19 @@ export const googleSignin = async (req, res) => {
 				id: user._id,
 			});
 
-			const _user = {
-				name: user.name,
-				email: user.email,
-				_id: user._id,
-				imageUrl: user.imageUrl,
-			};
-			res.cookie('refresh_token', refreshToken, {
+			res.cookie('jwt', refreshToken, {
 				httpOnly: true,
 			});
-			res.status(200).json({ user, accessToken });
+
+			res.status(200).json({
+				user: {
+					name: user.name,
+					email: user.email,
+					_id: user._id,
+					imageUrl: user.imageUrl,
+				},
+				accessToken,
+			});
 		} else {
 			const password = email + process.env.GOOGLE_CLIENT_ID;
 			const hashedPassword = await bcrypt.hash(password, 12);
@@ -177,62 +189,95 @@ export const googleSignin = async (req, res) => {
 
 			const accessToken = generateAccessToken({
 				email: result.email,
-				id: result._id,
+				_id: result._id,
 			});
 			const refreshToken = generateRefreshToken({
 				email: result.email,
-				id: result._id,
+				_id: result._id,
 			});
 
-			const _result = {
-				name: result.name,
-				email: result.email,
-				_id: result._id,
-				imageUrl: result.imageUrl,
-			};
-			res.cookie('token', refreshToken, {
+			res.cookie('jwt', refreshToken, {
 				httpOnly: true,
 			});
-			res.status(200).json({ user: result, accessToken });
+			res.status(200).json({
+				user: {
+					name: result.name,
+					email: result.email,
+					_id: result._id,
+					imageUrl: result.imageUrl,
+				},
+				accessToken,
+			});
 		}
 	}
 };
 
-export const refresh = async (req, res) => {
-	const refreshToken = req.cookies.refresh_token;
-	const accessToken = req.headers.authorization.split(' ')[1];
+export const handleRefreshToken = async (req, res) => {
+	const cookies = req.cookies;
 
-	if (!refreshToken || !accessToken)
-		return res.status(401).json({ message: 'Unauthorized' });
+	if (!cookies?.jwt) return res.status(401).json({ message: 'Unauthorized' });
+	const refreshToken = cookies.jwt;
 
-	try {
-		const decodedRefreshToken = jsonwebtoken.verify(
-			refreshToken,
-			process.env.REFRESH_TOKEN_SECRET
-		);
-		const decodedAccessToken = jsonwebtoken.verify(
-			accessToken,
-			process.env.ACCESS_TOKEN_SECRET
-		);
+	const foundUser = await User.findOne({ refreshToken });
 
-		const user = await User.findById(decodedRefreshToken.id);
+	if (!foundUser) return res.status(403).json({ message: 'Forbiden' });
 
-		if (!user) return res.status(401).json({ message: 'Unauthorized' });
+	jwt.verify(
+		refreshToken,
+		process.env.REFRESH_TOKEN_SECRET,
+		(err, decodedUser) => {
+			if (err || foundUser._id !== decodedUser.id) {
+				return res.status(403).json({ message: 'Forbiden' });
+			}
 
-		const newAccessToken = generateAccessToken({
-			email: user.email,
-			id: user._id,
-		});
+			const accessToken = generateAccessToken({
+				email: decodedUser.email,
+				id: decodedUser.id,
+			});
 
-		res.status(200).json({ user, accessToken: newAccessToken });
-	} catch (error) {
-		res.status(500).json({ message: 'Something went wrong' });
-	}
+			res.status(200).json({ accessToken });
+		}
+	);
 };
 
 export const signout = async (req, res) => {
-	res.clearCookie('refresh_token');
-	res.status(200).json({ message: 'User signed out successfully' });
+	const cookies = req.cookies;
+
+	if (!cookies?.jwt) return res.status(204);
+
+	const refreshToken = cookies.jwt;
+	console.log('sign out 1');
+
+	jwt.verify(
+		refreshToken,
+		process.env.REFRESH_TOKEN_SECRET,
+
+		async (err, decodedUser) => {
+			console.log(decodedUser);
+			if (err) return res.status(403).json({ message: 'Forbiden' });
+
+			const foundUser = await User.findOne({ refreshToken });
+			console.log(foundUser);
+			console.log('sign out 2');
+
+			console.log('sign out 3');
+
+			if (!foundUser) return res.status(403).json({ message: 'Forbiden' });
+
+			if (String(foundUser._id) !== decodedUser._id)
+				return res.status(403).json({ message: 'Forbiden' });
+
+			await User.findOneAndUpdate(
+				{ refreshToken },
+				{ refreshToken: '' },
+				{ new: true }
+			);
+			res.clearCookie('jwt');
+			console.log(res.cookies);
+			res.status(204).json({ message: 'User signed out successfully' });
+			console.log('Cookie removed!');
+		}
+	);
 };
 
 export const verifyEmail = async (req, res) => {

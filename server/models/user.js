@@ -6,6 +6,7 @@ const userSchema = mongoose.Schema({
 	password: { type: String, required: true },
 	imageUrl: { type: String, required: false },
 	verified: { type: Boolean, default: false },
+	refreshToken: { type: String },
 	id: { type: String },
 });
 

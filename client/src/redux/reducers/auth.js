@@ -1,20 +1,22 @@
-import { AUTH, LOGOUT } from '../actionTypes';
-const authReducer = (state = { authData: null }, action) => {
+import { AUTH, LOGOUT, REFRESH_TOKEN } from '../actionTypes';
+const authReducer = (state = {}, action) => {
 	switch (action.type) {
 		case AUTH:
-			localStorage.setItem('profile', JSON.stringify({ ...action?.payload }));
-
 			return {
 				...state,
 				token: action.payload.token,
-				userData: action.payload.user,
+				user: action.payload.user,
+			};
+		case REFRESH_TOKEN:
+			return {
+				...state,
+				token: action.payload.token,
 			};
 		case LOGOUT:
-			localStorage.clear();
 			return {
 				...state,
 				token: null,
-				userData: null,
+				user: null,
 			};
 		default:
 			return state;

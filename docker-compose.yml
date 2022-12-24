@@ -1,19 +1,11 @@
 version: '3.3'
 services:
-  nginx:
-    depends_on:
-      - api
-      - client
-    restart: always
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile.dev
-    ports:
-      - '3050:80'
   api:
     build:
       dockerfile: Dockerfile.dev
       context: './server'
+    ports:
+      - '5000:5000'
     volumes:
       - /app/node_modules
       - ./server:/app
@@ -24,6 +16,8 @@ services:
     build:
       context: ./client
       dockerfile: Dockerfile.dev
+    ports:
+      - '3000:3000'
     container_name: client_c
     volumes:
       - ./client/src:/app/src

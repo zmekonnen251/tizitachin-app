@@ -9,7 +9,7 @@ import { createPost, updatePost } from '../../redux/actions/posts';
 const Form = ({ currentId, setCurrentId }) => {
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
-	const user = JSON.parse(localStorage.getItem('profile'))?.user;
+	const user = useSelector((state) => state.auth?.user);
 	const [postData, setPostData] = useState({
 		title: '',
 		message: '',

@@ -10,10 +10,11 @@ import Home from './components/Home/Home';
 import Auth from './components/Auth/Auth';
 import PostDetails from './components/PostDetails/PostDetails';
 import EmailVerify from './components/EmailVerify/EmailVerify';
+import { useSelector } from 'react-redux';
 
 const App = () => {
-	const profile = JSON.parse(localStorage.getItem('profile'));
-	const user = profile?.user;
+	const user = useSelector((state) => state.auth?.user);
+	console.log(user ? 'user is logged in' : 'user is not logged in');
 
 	return (
 		<Container maxWidth='xl'>

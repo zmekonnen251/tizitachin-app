@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import decode from 'jwt-decode';
 import {
@@ -18,26 +18,18 @@ import { signOut, refreshToken } from '../../redux/actions/auth';
 const Navbar = () => {
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
-
-	const profile = JSON.parse(localStorage.getItem('profile'));
-	const userData = profile?.user;
-	const token = profile?.token;
-	const [user, setUser] = useState(userData);
+	const { user, token } = useSelector((state) => state.auth);
 
 	const location = useLocation();
 
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	const logout = () => {
-		dispatch(signOut(navigate, setUser));
-	};
 
 	useEffect(() => {
+		console.log(token);
 		if (token) {
 			const decodedToken = decode(token);
 			if (decodedToken.exp * 1000 < new Date().getTime()) {
-				dispatch(refreshToken(setUser));
-			} else {
-				setUser(userData);
+				dispatch(refreshToken());
 			}
 		}
 
@@ -64,7 +56,11 @@ const Navbar = () => {
 						<Typography sx={classes.userName} variant='h6'>
 							{user.name}
 						</Typography>
-						<Button variant='contained' color='error' onClick={logout}>
+						<Button
+							variant='contained'
+							color='error'
+							onClick={() => dispatch(signOut(navigate))}
+						>
 							Logout
 						</Button>
 					</Box>

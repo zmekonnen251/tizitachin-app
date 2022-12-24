@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import moment from 'moment';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { deletePost, likePost } from '../../../redux/actions/posts';
 
 import {
@@ -23,7 +23,7 @@ import classes from './styles';
 const Post = ({ post, setCurrentId }) => {
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
-	const user = JSON.parse(localStorage.getItem('profile'))?.user;
+	const user = useSelector((state) => state.auth.user);
 
 	const Likes = () => {
 		if (post['likes'] !== undefined && post.likes.length > 0) {
