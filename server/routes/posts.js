@@ -10,17 +10,19 @@ import {
 	commentPost,
 } from '../controllers/posts.js';
 
+import { protect } from '../controllers/users.js';
+
 import verifyJwt from '../middleware/verifyJwt.js';
 
 const router = express.Router();
 // localhost:5000/posts
 router.get('/', getPosts);
-router.post('/', verifyJwt, createPost);
+router.post('/', protect, createPost);
 router.get('/search', getPostsBySearch);
 router.get('/:id', getPost);
-router.patch('/:id', verifyJwt, updatePost);
-router.delete('/:id', verifyJwt, deletePost);
-router.patch('/:id/likePost', verifyJwt, likePost);
-router.post('/:id/commentPost', verifyJwt, commentPost);
+router.patch('/:id', protect, updatePost);
+router.delete('/:id', protect, deletePost);
+router.patch('/:id/likePost', protect, likePost);
+router.post('/:id/commentPost', protect, commentPost);
 
 export default router;

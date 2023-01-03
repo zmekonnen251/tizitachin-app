@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 import { generateAccessToken, generateRefreshToken } from '../utils/utils.js';
 import User from '../models/user.js';
 import Token from '../models/token.js';
-import sendEmail from '../utils/sendEmail.js';
+import Email from '../utils/email.js';
 
 dotenv.config();
 
@@ -24,37 +24,34 @@ export const signin = async (req, res) => {
 
 		const isPasswordCorrect = await bcrypt.compare(password, oldUser.password);
 
-		console.log(oldUser);
 		if (!isPasswordCorrect)
 			return res.status(400).json({ message: 'Invalid credentials' });
 
-		// if (!oldUser.verified) {
-		// 	const token = await Token.findOne({ userId: oldUser._id });
+		if (!oldUser.verified) {
+			const token = await Token.findOne({ userId: oldUser._id });
 
-		// 	if (!token) {
-		// 		const newToken = new Token({
-		// 			userId: oldUser._id,
-		// 			token: crypto.randomBytes(16).toString('hex'),
-		// 		}).save();
+			if (!token) {
+				const newToken = new Token({
+					userId: oldUser._id,
+					token: crypto.randomBytes(16).toString('hex'),
+				}).save();
 
-		// 		const url = `${process.env.BASE_URL}/user/${oldUser._id}/confirmation/${newToken.token}`;
-		// 		await sendEmail({
-		// 			email: oldUser.email,
-		// 			subject: 'Account Verification Token',
-		// 			message: `Please click on the following link ${url} to verify your account.`,
-		// 		});
+				const url = `${process.env.FRONT_END_URL}/user/${oldUser._id}/confirmation/${newToken.token}`;
+				await new Email(oldUser, url).sendEmailVerification();
 
-		// 		return res.status(200).json({
-		// 			message:
-		// 				'An email has been sent to you. Please verify your account to login.',
-		// 		});
-		// 	}
+				return res.status(200).json({
+					message:
+						'An email has been sent to you. Please verify your account to login.',
+				});
+			}
 
-		// 	return res.status(400).json({ message: 'Please verify your email' });
-		// }
+			return res.status(400).json({ message: 'Please verify your email' });
+		}
 
 		const accessToken = generateAccessToken({
 			email: oldUser.email,
+			name: oldUser.name,
+			imageUrl: oldUser.imageUrl,
 			_id: oldUser._id,
 		});
 		const refreshToken = generateRefreshToken({
@@ -79,7 +76,11 @@ export const signin = async (req, res) => {
 			maxAge: 7 * 24 * 60 * 60 * 1000,
 		});
 
-		console.log(res.cookies);
+		res.cookie('access-token', accessToken, {
+			secure: true,
+			sameSite: 'none',
+			maxAge: 15 * 60 * 1000,
+		});
 
 		res.status(200).json({
 			user: {
@@ -88,12 +89,11 @@ export const signin = async (req, res) => {
 				_id: oldUser._id,
 				imageUrl: oldUser.imageUrl,
 			},
-			accessToken,
 		});
 	} catch (error) {
 		res.status(500).json({ message: 'Something went wrong' });
 
-		console.log(error);
+		// console.log(error);
 	}
 };
 
@@ -122,13 +122,9 @@ export const signup = async (req, res) => {
 			token: crypto.randomBytes(16).toString('hex'),
 		});
 
-		const url = `${process.env.BASE_URL}/users/${result._id}/confirmation/${token.token}`;
+		const url = `${process.env.FRONT_END_URL}/users/${result._id}/confirmation/${token.token}`;
 
-		await sendEmail({
-			email: result.email,
-			subject: 'Account Verification',
-			message: `Please click on the following link ${url} to verify your account.`,
-		});
+		await new Email(result, url).sendEmailVerification();
 
 		res.status(200).json({
 			message: 'An email has been sent to you. Please verify your account',
@@ -136,13 +132,13 @@ export const signup = async (req, res) => {
 	} catch (error) {
 		res.status(500).json({ message: 'Something went wrong' });
 
-		console.log(error);
+		// console.log(error);
 	}
 };
 
 export const googleSignin = async (req, res) => {
 	const { tokenId } = req.body;
-	console.log(tokenId);
+
 	const response = await client.verifyIdToken({
 		idToken: tokenId,
 		audience: process.env.GOOGLE_CLIENT_ID,
@@ -156,6 +152,8 @@ export const googleSignin = async (req, res) => {
 		if (user) {
 			const accessToken = generateAccessToken({
 				email: user.email,
+				name: user.name,
+				imageUrl: user.imageUrl,
 				id: user._id,
 			});
 			const refreshToken = generateRefreshToken({
@@ -167,6 +165,11 @@ export const googleSignin = async (req, res) => {
 				httpOnly: true,
 			});
 
+			res.cookie('access-token', accessToken, {
+				maxAge: 15 * 60 * 1000,
+				sameSite: 'none',
+			});
+
 			res.status(200).json({
 				user: {
 					name: user.name,
@@ -174,7 +177,6 @@ export const googleSignin = async (req, res) => {
 					_id: user._id,
 					imageUrl: user.imageUrl,
 				},
-				accessToken,
 			});
 		} else {
 			const password = email + process.env.GOOGLE_CLIENT_ID;
@@ -212,55 +214,21 @@ export const googleSignin = async (req, res) => {
 	}
 };
 
-export const handleRefreshToken = async (req, res) => {
-	const cookies = req.cookies;
-
-	if (!cookies?.jwt) return res.status(401).json({ message: 'Unauthorized' });
-	const refreshToken = cookies.jwt;
-
-	const foundUser = await User.findOne({ refreshToken });
-
-	if (!foundUser) return res.status(403).json({ message: 'Forbiden' });
-
-	jwt.verify(
-		refreshToken,
-		process.env.REFRESH_TOKEN_SECRET,
-		(err, decodedUser) => {
-			if (err || foundUser._id !== decodedUser.id) {
-				return res.status(403).json({ message: 'Forbiden' });
-			}
-
-			const accessToken = generateAccessToken({
-				email: decodedUser.email,
-				id: decodedUser.id,
-			});
-
-			res.status(200).json({ accessToken });
-		}
-	);
-};
-
 export const signout = async (req, res) => {
 	const cookies = req.cookies;
 
 	if (!cookies?.jwt) return res.status(204);
 
 	const refreshToken = cookies.jwt;
-	console.log('sign out 1');
 
 	jwt.verify(
 		refreshToken,
 		process.env.REFRESH_TOKEN_SECRET,
 
 		async (err, decodedUser) => {
-			console.log(decodedUser);
 			if (err) return res.status(403).json({ message: 'Forbiden' });
 
 			const foundUser = await User.findOne({ refreshToken });
-			console.log(foundUser);
-			console.log('sign out 2');
-
-			console.log('sign out 3');
 
 			if (!foundUser) return res.status(403).json({ message: 'Forbiden' });
 
@@ -273,9 +241,11 @@ export const signout = async (req, res) => {
 				{ new: true }
 			);
 			res.clearCookie('jwt');
-			console.log(res.cookies);
+			res.clearCookie('access-token');
+			// res.cookie('jwt', 'loggedout');
+			// res.cookie('access-token', 'loggedout');
+
 			res.status(204).json({ message: 'User signed out successfully' });
-			console.log('Cookie removed!');
 		}
 	);
 };
@@ -307,4 +277,67 @@ export const verifyEmail = async (req, res) => {
 	} catch (error) {
 		res.status(500).json({ message: 'Something went wrong' });
 	}
+};
+
+export const protect = async (req, res, next) => {
+	const refreshToken = req.cookies['jwt'];
+	const accessToken = req.cookies['access-token'];
+
+	if (!refreshToken || !accessToken) {
+		return res.status(401).json({ message: 'Unauthorized' });
+	}
+
+	jwt.verify(
+		accessToken,
+		process.env.ACCESS_TOKEN_SECRET,
+		async (err, decodedUser) => {
+			if (err) {
+				jwt.verify(
+					refreshToken,
+					process.env.REFRESH_TOKEN_SECRET,
+					async (err, decodedUser) => {
+						if (err) {
+							return res.status(403).json({ message: 'Forbiden' });
+						}
+
+						const foundUser = await User.findOne({ refreshToken }).select(
+							'-password'
+						);
+
+						if (!foundUser)
+							return res.status(403).json({ message: 'Forbiden' });
+
+						if (String(foundUser._id) !== decodedUser._id)
+							return res.status(403).json({ message: 'Forbiden' });
+
+						const newAccessToken = generateAccessToken({
+							email: decodedUser.email,
+							name: foundUser.name,
+							imageUrl: foundUser.imageUrl,
+							_id: decodedUser._id,
+						});
+
+						req.userId = decodedUser._id;
+
+						res.cookie('access-token', newAccessToken, {
+							sameSite: 'none',
+							secure: true,
+							maxAge: 15 * 60 * 1000,
+						});
+
+						res.status(200).json({
+							user: {
+								name: foundUser.name,
+								email: foundUser.email,
+								_id: foundUser._id,
+							},
+						});
+					}
+				);
+			} else {
+				req.userId = decodedUser._id;
+			}
+		}
+	);
+	next();
 };
