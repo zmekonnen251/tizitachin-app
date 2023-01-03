@@ -10,8 +10,8 @@ import {
 	Box,
 } from '@mui/material';
 import classes from './styles';
-import memoriesLogo from '../../images/memories-Logo.png';
-import memoriesText from '../../images/memories-Text.png';
+import memoriesLogo from '../../assets/memories-Logo.png';
+import memoriesText from '../../assets/memories-Text.png';
 import { signOut, getUser } from '../../redux/actions/auth';
 
 const Navbar = () => {
