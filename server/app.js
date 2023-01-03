@@ -19,10 +19,9 @@ if (process.env.NODE_ENV === 'development') {
 	app.use(morgan('dev'));
 }
 
-app.use(credentials);
-app.use(cors(corsOptions));
+app.use(cors());
+// app.use(credentials);
 
-dotenv.config();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
