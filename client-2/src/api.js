@@ -2,10 +2,10 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 
 export const API = axios.create(
-	// {
-	// 	// 	// https://memories-social-project-app.herokuapp.com/
-	// 	baseURL: 'http://localhost:5000/api',
-	// },
+	{
+		// 	// https://memories-social-project-app.herokuapp.com/
+		baseURL: 'https://tizitachin-api.fly.dev',
+	},
 	{
 		withCredentials: true,
 	}

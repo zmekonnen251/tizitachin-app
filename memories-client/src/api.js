@@ -2,10 +2,10 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 
 export const API = axios.create(
-	// {
-	// 	// 	// https://memories-social-project-app.herokuapp.com/
-	// 	baseURL: 'http://localhost:5000/api',
-	// },
+	{
+		// 	// https://memories-social-project-app.herokuapp.com/
+		baseURL: 'https://tizitachin-api.fly.dev',
+	},
 	{
 		withCredentials: true,
 	}
@@ -34,7 +34,10 @@ export const deletePost = (id) => API.delete(`/api/posts/${id}`);
 export const likePost = (id) => API.patch(`/api/posts/${id}/likePost`);
 export const comment = (value, id) =>
 	API.post(`/api/posts/${id}/commentPost`, { value });
-export const signIn = (formData) => API.post(`/api/users/signin`, formData);
+export const signIn = (formData) =>
+	API.post(`/api/users/signin`, formData, {
+		withCredentials: true,
+	});
 export const signUp = (formData) => API.post(`/api/users/signup`, formData);
 export const signOut = () => API.get(`/api/users/signout`);
 export const signInWithGoogle = (tokenId) =>

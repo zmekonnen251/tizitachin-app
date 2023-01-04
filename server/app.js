@@ -5,7 +5,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 
 import cookieParser from 'cookie-parser';
-import corsOptions from './config/corsOptions.js';
+// import corsOptions from './config/corsOptions.js';
 
 import postRoutes from './routes/posts.js';
 import userRoutes from './routes/users.js';
@@ -15,12 +15,23 @@ dotenv.config();
 
 const app = express();
 
+const corsOptions = {
+	origin: ['*'],
+	optionSuccessStatus: 200,
+	credentials: true,
+};
+
 if (process.env.NODE_ENV === 'development') {
 	app.use(morgan('dev'));
 }
 
-app.use(cors());
-// app.use(credentials);
+app.use(
+	cors({
+		origin: 'https://tizitachin.netlify.app',
+		credentials: true,
+	})
+);
+app.use(credentials);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

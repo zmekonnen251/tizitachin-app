@@ -69,18 +69,28 @@ export const signin = async (req, res) => {
 			}
 		);
 
-		res.cookie('jwt', refreshToken, {
-			httpOnly: true,
-			secure: true,
-			sameSite: 'none',
-			maxAge: 7 * 24 * 60 * 60 * 1000,
-		});
+		res.setHeader(
+			`Set-Cookie`,
+			`jwt=${refreshToken}; HttpOnly; Secure; SameSite=None; Domain=https://tizitachin.netlify.app; Max-Age=604800`
+		);
+		res.setHeader(
+			`Set-Cookie`,
+			`access-token=${accessToken}; HttpOnly; Secure; SameSite=None; Domain=https://tizitachin.netlify.app; Max-Age=900`
+		);
+		// res.cookie('jwt', refreshToken, {
+		// 	httpOnly: true,
+		// 	secure: true,
+		// 	domain: 'https://tizitachin.netlify.app',
+		// 	sameSite: 'None',
+		// 	maxAge: 7 * 24 * 60 * 60 * 1000,
+		// });
 
-		res.cookie('access-token', accessToken, {
-			secure: true,
-			sameSite: 'none',
-			maxAge: 15 * 60 * 1000,
-		});
+		// res.cookie('access-token', accessToken, {
+		// 	secure: true,
+		// 	domain: 'https://tizitachin.netlify.app',
+		// 	sameSite: 'None',
+		// 	maxAge: 15 * 60 * 1000,
+		// });
 
 		res.status(200).json({
 			user: {
@@ -163,11 +173,16 @@ export const googleSignin = async (req, res) => {
 
 			res.cookie('jwt', refreshToken, {
 				httpOnly: true,
+				domain: 'https://tizitachin.netlify.app',
+				sameSite: 'None',
+				secure: true,
 			});
 
 			res.cookie('access-token', accessToken, {
 				maxAge: 15 * 60 * 1000,
-				sameSite: 'none',
+				sameSite: 'None',
+				secure: true,
+				domain: 'https://tizitachin.netlify.app',
 			});
 
 			res.status(200).json({
@@ -200,15 +215,25 @@ export const googleSignin = async (req, res) => {
 
 			res.cookie('jwt', refreshToken, {
 				httpOnly: true,
+				domain: 'https://tizitachin.netlify.app',
+				sameSite: 'None',
+				secure: true,
 			});
+
+			res.cookie('access-token', accessToken, {
+				maxAge: 15 * 60 * 1000,
+				sameSite: 'None',
+				secure: true,
+				domain: 'https://tizitachin.netlify.app',
+			});
+
 			res.status(200).json({
 				user: {
-					name: result.name,
-					email: result.email,
-					_id: result._id,
-					imageUrl: result.imageUrl,
+					name: user.name,
+					email: user.email,
+					_id: user._id,
+					imageUrl: user.imageUrl,
 				},
-				accessToken,
 			});
 		}
 	}
@@ -320,9 +345,10 @@ export const protect = async (req, res, next) => {
 						req.userId = decodedUser._id;
 
 						res.cookie('access-token', newAccessToken, {
-							sameSite: 'none',
+							sameSite: 'None',
 							secure: true,
 							maxAge: 15 * 60 * 1000,
+							domain: 'https://tizitachin.netlify.app',
 						});
 
 						res.status(200).json({

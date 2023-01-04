@@ -13,7 +13,7 @@ export const allowedOrigins = [
 	'http://127.0.0.1:5173',
 	'http://127.0.0.1:3001',
 	'http://127.0.0.1:8080',
-	'https://tizitachin.netlify.app',
+	'https://tizitachin.netlify.app/',
 ];
 
 export default {

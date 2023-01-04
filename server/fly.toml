@@ -1,4 +1,4 @@
-# fly.toml file generated for tizitachin-api on 2023-01-03T23:56:44+03:00
+# fly.toml file generated for tizitachin-api on 2023-01-04T03:16:04+03:00
 
 app = "tizitachin-api"
 kill_signal = "SIGINT"
